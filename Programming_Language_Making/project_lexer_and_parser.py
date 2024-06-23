@@ -12,7 +12,7 @@ tokens = (
     'VAR', 'LAMBDA', 'DOT', 'LPAREN', 'RPAREN'
 )
 
-t_VAR = r'[a-zA-Z]'
+t_VAR = r'[a-z]'
 t_LAMBDA = r'\#'
 t_DOT = r'\.'
 t_LPAREN = r'\('
@@ -154,7 +154,7 @@ def reduce(expr, env=None):
 def main():
     while True:
         try:
-            data = input("Enter expression: ")
+            data = input("\nEnter expression: ")
             if not data:
                 continue
             result = parser.parse(data)
