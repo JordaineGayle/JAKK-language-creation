@@ -17,9 +17,7 @@ t_LAMBDA = r'\#'  # The hashtag symbol used instead of the lambda symbol
 t_DOT = r'\.'  # Dot character
 t_LPAREN = r'\('  # Left parenthesis
 t_RPAREN = r'\)'  # Right parenthesis
-
-# A string containing ignored characters (spaces and tabs)
-t_ignore = ' \t'
+t_ignore = ' \t'  # A string containing ignored characters (spaces and tabs)
 
 
 # Rule for handling newlines
@@ -88,9 +86,9 @@ def p_expr_var(p):
     p[0] = VarNode(p[1])
 
 
-def p_expr_lambda(p):
-    """expr : LAMBDA VAR DOT expr"""
-    p[0] = LambdaNode(p[2], p[4])
+# def p_expr_lambda(p):
+#     """expr : LAMBDA VAR DOT expr"""
+#     p[0] = LambdaNode(p[2], p[4])
 
 
 def p_expr_abs(p):
@@ -109,7 +107,7 @@ def p_expr_paren(p):
 
 
 # Error rule for syntax errors
-def p_error():
+def p_error(p):
     print("Syntax error in input!")
 
 
