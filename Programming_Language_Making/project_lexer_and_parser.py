@@ -94,7 +94,10 @@ def p_expr_paren(p):
 
 # Error rule for syntax errors
 def p_error(p):
-    print("Syntax error in input!")
+    if p:
+        print(f"Syntax error near token '{p.value}' at line {p.lineno}, position {p.lexpos}")
+    else:
+        print("Syntax error at EOF")
 
 
 # Build the parser
@@ -149,6 +152,7 @@ def main():
                 result = new_result
                 print("Reduced to:", result)
             print("Normal form:", result)  # Print the final reduced form
+            print("\nTo exit, press Ctrl+D")
         except EOFError:
             break  # Exit on EOF (Ctrl+D or Ctrl+Z)
 
