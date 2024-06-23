@@ -41,15 +41,6 @@ lexer = lex.lex()
 #############################
 
 # Define the nodes for the abstract syntax tree (AST)
-class LambdaNode:
-    def __init__(self, var, body):
-        self.var = var
-        self.body = body
-
-    def __repr__(self):
-        return f'(# {self.var} . {self.body})'
-
-
 class VarNode:
     def __init__(self, name):
         self.name = name
@@ -75,7 +66,7 @@ class AbsNode:
         self.body = body
 
     def __repr__(self):
-        return f'(λ {self.var} . {self.body})'
+        return f'(# {self.var} . {self.body})'
 
 
 #############################
@@ -84,11 +75,6 @@ class AbsNode:
 def p_expr_var(p):
     """expr : VAR"""
     p[0] = VarNode(p[1])
-
-
-# def p_expr_lambda(p):
-#     """expr : LAMBDA VAR DOT expr"""
-#     p[0] = LambdaNode(p[2], p[4])
 
 
 def p_expr_abs(p):
@@ -127,18 +113,18 @@ def reduce(expr, env=None):
     if isinstance(expr, VarNode):
         return env.get(expr.name, expr)  # Lookup variable in the environment
 
-    if isinstance(expr, LambdaNode) or isinstance(expr, AbsNode):
-        return expr  # Return lambda expressions as is
+    if isinstance(expr, AbsNode):
+        return expr  # Return abstraction expressions as is
 
     if isinstance(expr, AppNode):
         func = reduce(expr.func, env)  # Reduce function part
         arg = reduce(expr.arg, env)  # Reduce argument part
-        if isinstance(func, LambdaNode) or isinstance(expr, AbsNode):
-            new_env = env.copy()  # Create a new environment for the lambda
-            new_env[func.var] = arg  # Bind the lambda's variable to the argument
+        if isinstance(func, AbsNode):
+            new_env = env.copy()  # Create a new environment for the abstraction
+            new_env[func.var] = arg  # Bind the abstraction's variable to the argument
             return reduce(func.body, new_env)  # Reduce the body with the new environment
         else:
-            return AppNode(func, arg)  # If not a lambda, return as an application
+            return AppNode(func, arg)  # If not an abstraction, return as an application
 
     return expr  # Return the expression if no reduction is possible
 
