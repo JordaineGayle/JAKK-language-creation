@@ -128,16 +128,44 @@ parser = yacc.yacc()
 # INTERPRETER
 #############################
 
-# Function to substitute a variable in an expression with another expression
+# Function to get free variables in an expression, recursively collects free variables from VarNode, AbsNode, & AppNode
+def free_vars(expr):
+    if isinstance(expr, VarNode):
+        return {expr.name}
+    elif isinstance(expr, AbsNode):
+        return free_vars(expr.body) - {expr.var}
+    elif isinstance(expr, AppNode):
+        return free_vars(expr.func) | free_vars(expr.arg)
+    else:
+        raise TypeError(f"Unexpected expression type: {type(expr)}")
+
+
+# Function to perform alpha conversion, renaming bound variables to avoid conflicts.
+def alpha_convert(expr, old_var, new_var):
+    if isinstance(expr, VarNode):
+        return VarNode(new_var) if expr.name == old_var else expr
+    elif isinstance(expr, AbsNode):
+        if expr.var == old_var:
+            return AbsNode(new_var, alpha_convert(expr.body, old_var, new_var))
+        else:
+            return AbsNode(expr.var, alpha_convert(expr.body, old_var, new_var))
+    elif isinstance(expr, AppNode):
+        return AppNode(alpha_convert(expr.func, old_var, new_var), alpha_convert(expr.arg, old_var, new_var))
+    else:
+        raise TypeError(f"Unexpected expression type: {type(expr)}")
+
+
+# Function to substitute a variable in an expression with another expression, avoiding capture
 def substitute(var, expr, value):
     if isinstance(expr, VarNode):
-        if expr.name == var:
-            return value
-        else:
-            return expr
+        return value if expr.name == var else expr
     elif isinstance(expr, AbsNode):
         if expr.var == var:
-            return expr
+            return expr  # No substitution if the variable is bound in this abstraction
+        elif expr.var in free_vars(value):
+            new_var = expr.var + "'"
+            new_body = alpha_convert(expr.body, expr.var, new_var)
+            return AbsNode(new_var, substitute(var, new_body, value))
         else:
             return AbsNode(expr.var, substitute(var, expr.body, value))
     elif isinstance(expr, AppNode):
@@ -146,7 +174,7 @@ def substitute(var, expr, value):
         raise TypeError(f"Unexpected expression type: {type(expr)}")
 
 
-# Function to reduce expressions
+# Function to perform beta reduction on expressions, reducing them step by step to their normal form.
 def reduce(expr):
     if isinstance(expr, VarNode):
         return expr, False
