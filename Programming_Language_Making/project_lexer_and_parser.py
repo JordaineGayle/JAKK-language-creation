@@ -60,7 +60,7 @@ class AppNode:
         self.arg = arg
 
     def __repr__(self):
-        return f'({self.func} {self.arg})'
+        return f'{self.func} {self.arg}'
 
 
 # Function Abstraction
@@ -128,40 +128,48 @@ parser = yacc.yacc()
 # INTERPRETER
 #############################
 
-# Function to reduce expressions
-def reduce(expr, env=None):
-    if env is None:
-        env = {}
-
-    try:
-        if isinstance(expr, VarNode):
-            return expr, False  # Variables do not reduce further
-
-        elif isinstance(expr, AbsNode):
-            reduced_body, changed = reduce(expr.body, env)
-            if changed:
-                print(f"Reduced abstraction: (# {expr.var} . {expr.body}) -> (# {expr.var} . {reduced_body})")
-            return AbsNode(expr.var, reduced_body), changed
-
-        elif isinstance(expr, AppNode):
-            reduced_func, changed_func = reduce(expr.func, env)
-            reduced_arg, changed_arg = reduce(expr.arg, env)
-
-            if isinstance(reduced_func, AbsNode):
-                # Substitute the argument into the body of the function
-                new_env = {**env, reduced_func.var: reduced_arg}
-                reduced_body, changed_body = reduce(reduced_func.body, new_env)
-                if changed_func or changed_arg or changed_body:
-                    print(f"Applied function: ({reduced_func} {reduced_arg}) -> {reduced_body}")
-                return reduced_body, True
-            else:
-                return AppNode(reduced_func, reduced_arg), changed_func or changed_arg
-
+# Function to substitute a variable in an expression with another expression
+def substitute(var, expr, value):
+    if isinstance(expr, VarNode):
+        if expr.name == var:
+            return value
         else:
-            raise TypeError(f"Unexpected expression type: {type(expr)}")
+            return expr
+    elif isinstance(expr, AbsNode):
+        if expr.var == var:
+            return expr
+        else:
+            return AbsNode(expr.var, substitute(var, expr.body, value))
+    elif isinstance(expr, AppNode):
+        return AppNode(substitute(var, expr.func, value), substitute(var, expr.arg, value))
+    else:
+        raise TypeError(f"Unexpected expression type: {type(expr)}")
 
-    except Exception as e:
-        raise RuntimeError(f"Error in reducing expression: {e}")
+
+# Function to reduce expressions
+def reduce(expr):
+    if isinstance(expr, VarNode):
+        return expr, False
+    elif isinstance(expr, AbsNode):
+        reduced_body, changed = reduce(expr.body)
+        if changed:
+            return AbsNode(expr.var, reduced_body), True
+        else:
+            return expr, False
+    elif isinstance(expr, AppNode):
+        if isinstance(expr.func, AbsNode):
+            reduced_expr = substitute(expr.func.var, expr.func.body, expr.arg)
+            return reduced_expr, True
+        else:
+            reduced_func, func_changed = reduce(expr.func)
+            if func_changed:
+                return AppNode(reduced_func, expr.arg), True
+            reduced_arg, arg_changed = reduce(expr.arg)
+            if arg_changed:
+                return AppNode(expr.func, reduced_arg), True
+            return expr, False
+    else:
+        raise TypeError(f"Unexpected expression type: {type(expr)}")
 
 
 #############################
