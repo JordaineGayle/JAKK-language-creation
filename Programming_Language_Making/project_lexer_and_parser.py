@@ -15,31 +15,26 @@ tokens = (
 # Regular expression rules for simple tokens
 def t_VAR(t):
     r"""[a-z]"""
-    print("VAR")
     return t
 
 
 def t_LAMBDA(t):
     r"""\#"""
-    print("LAMBDA")
     return t
 
 
 def t_DOT(t):
     r"""\."""
-    print("DOT")
     return t
 
 
 def t_LPAREN(t):
     r"""\("""
-    print("LPAREN")
     return t
 
 
 def t_RPAREN(t):
     r"""\)"""
-    print("RPAREN")
     return t
 
 
@@ -240,11 +235,13 @@ def main():
             if any(c.isupper() for c in data):  # Check for uppercase letters
                 raise ValueError("Expression contains uppercase letters")
             lexer.input(data)  # Feed the input data to the lexer
+            tokens_list = []  # Print tokens for the initial expression
             while True:
                 tok = lexer.token()  # Get the next token
                 if not tok:
                     break  # No more tokens
-                print(tok.type)
+                tokens_list.append(tok.type)
+            print("Tokens:", ', '.join(tokens_list))  # Print the list of tokens
             result = parser.parse(data)  # Parse the input data
             print("Initial expression:", result)
 
