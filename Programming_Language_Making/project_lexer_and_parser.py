@@ -11,12 +11,38 @@ tokens = (
     'VAR', 'LAMBDA', 'DOT', 'LPAREN', 'RPAREN'
 )
 
+
 # Regular expression rules for simple tokens
-t_VAR = r'[a-z]'  # Single lowercase letter
-t_LAMBDA = r'\#'  # The hashtag symbol used instead of the lambda symbol
-t_DOT = r'\.'  # Dot character
-t_LPAREN = r'\('  # Left parenthesis
-t_RPAREN = r'\)'  # Right parenthesis
+def t_VAR(t):
+    r"""[a-z]"""
+    print("VAR")
+    return t
+
+
+def t_LAMBDA(t):
+    r"""\#"""
+    print("LAMBDA")
+    return t
+
+
+def t_DOT(t):
+    r"""\."""
+    print("DOT")
+    return t
+
+
+def t_LPAREN(t):
+    r"""\("""
+    print("LPAREN")
+    return t
+
+
+def t_RPAREN(t):
+    r"""\)"""
+    print("RPAREN")
+    return t
+
+
 t_ignore = ' \t'  # A string containing ignored characters (spaces and tabs)
 
 
@@ -213,6 +239,12 @@ def main():
                 continue
             if any(c.isupper() for c in data):  # Check for uppercase letters
                 raise ValueError("Expression contains uppercase letters")
+            lexer.input(data)  # Feed the input data to the lexer
+            while True:
+                tok = lexer.token()  # Get the next token
+                if not tok:
+                    break  # No more tokens
+                print(tok.type)
             result = parser.parse(data)  # Parse the input data
             print("Initial expression:", result)
 
