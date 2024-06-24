@@ -60,7 +60,7 @@ class AppNode:
         self.arg = arg
 
     def __repr__(self):
-        return f'{self.func} {self.arg}'
+        return f'({self.func} {self.arg})'
 
 
 # Function Abstraction
