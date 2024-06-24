@@ -103,12 +103,8 @@ def p_term_paren(p):
 
 
 def p_application(p):
-    """application : application term
-                   | term term"""
-    if len(p) == 3:
-        p[0] = AppNode(p[1], p[2])
-    else:
-        p[0] = AppNode(p[1], p[2])
+    """application : expr term"""
+    p[0] = AppNode(p[1], p[2])
 
 
 def p_abstraction(p):
@@ -139,27 +135,27 @@ def reduce(expr, env=None):
 
     try:
         if isinstance(expr, VarNode):
-            return expr, False  # Variables do not reduce further
+            return env.get(expr.name, expr), False  # Lookup variable in the environment and indicate no change
 
         elif isinstance(expr, AbsNode):
-            reduced_body, changed = reduce(expr.body, env)
-            if changed:
-                print(f"Reduced abstraction: (# {expr.var} . {expr.body}) -> (# {expr.var} . {reduced_body})")
-            return AbsNode(expr.var, reduced_body), changed
+            return expr, False  # Return abstraction expressions as is with no change
 
         elif isinstance(expr, AppNode):
-            reduced_func, changed_func = reduce(expr.func, env)
-            reduced_arg, changed_arg = reduce(expr.arg, env)
+            func, changed_func = reduce(expr.func, env)  # Reduce function part
+            arg, changed_arg = reduce(expr.arg, env)  # Reduce argument part
 
-            if isinstance(reduced_func, AbsNode):
+            if isinstance(func, AbsNode):
                 # Substitute the argument into the body of the function
-                new_env = {**env, reduced_func.var: reduced_arg}
-                reduced_body, changed_body = reduce(reduced_func.body, new_env)
+                new_env = {**env, func.var: arg}
+                reduced_body, changed_body = reduce(func.body, new_env)
+
                 if changed_func or changed_arg or changed_body:
-                    print(f"Applied function: ({reduced_func} {reduced_arg}) -> {reduced_body}")
+                    print(f"Applied function: ({func} {arg}) -> {reduced_body}")
+
                 return reduced_body, True
+
             else:
-                return AppNode(reduced_func, reduced_arg), changed_func or changed_arg
+                return AppNode(func, arg), changed_func or changed_arg
 
         else:
             raise TypeError(f"Unexpected expression type: {type(expr)}")
