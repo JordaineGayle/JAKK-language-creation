@@ -77,22 +77,25 @@ class AbsNode:
 # GRAMMAR RULES
 #############################
 
-def p_expr(p):
-    """expr : term
-            | application
-            | abstraction"""
+def p_expr_term(p):
+    """expr : term"""
     p[0] = p[1]
 
+def p_expr_application(p):
+    """expr : application"""
+    p[0] = p[1]
+
+def p_expr_abstraction(p):
+    """expr : abstraction"""
+    p[0] = p[1]
 
 def p_term_var(p):
     """term : VAR"""
     p[0] = VarNode(p[1])
 
-
 def p_term_paren(p):
     """term : LPAREN expr RPAREN"""
     p[0] = p[2]
-
 
 def p_application(p):
     """application : application term
@@ -100,8 +103,7 @@ def p_application(p):
     if len(p) == 3:
         p[0] = AppNode(p[1], p[2])
     else:
-        p[0] = AppNode(p[1], p[3])
-
+        p[0] = AppNode(p[1], p[2])
 
 def p_abstraction(p):
     """abstraction : LAMBDA VAR DOT expr"""
@@ -131,20 +133,27 @@ def reduce(expr, env=None):
 
     try:
         if isinstance(expr, VarNode):
-            return env.get(expr.name, expr)  # Lookup variable in the environment
+            return expr, False  # Variables do not reduce further
 
         elif isinstance(expr, AbsNode):
-            return expr  # Return abstraction expressions as is
+            reduced_body, changed = reduce(expr.body, env)
+            if changed:
+                print(f"Reduced abstraction: (# {expr.var} . {expr.body}) -> (# {expr.var} . {reduced_body})")
+            return AbsNode(expr.var, reduced_body), changed
 
         elif isinstance(expr, AppNode):
-            func = reduce(expr.func, env)  # Reduce function part
-            arg = reduce(expr.arg, env)  # Reduce argument part
-            if isinstance(func, AbsNode):
-                new_env = env.copy()  # Create a new environment for the abstraction
-                new_env[func.var] = arg  # Bind the abstraction's variable to the argument
-                return reduce(func.body, new_env)  # Reduce the body with the new environment
+            reduced_func, changed_func = reduce(expr.func, env)
+            reduced_arg, changed_arg = reduce(expr.arg, env)
+
+            if isinstance(reduced_func, AbsNode):
+                # Substitute the argument into the body of the function
+                new_env = {**env, reduced_func.var: reduced_arg}
+                reduced_body, changed_body = reduce(reduced_func.body, new_env)
+                if changed_func or changed_arg or changed_body:
+                    print(f"Applied function: ({reduced_func} {reduced_arg}) -> {reduced_body}")
+                return reduced_body, True
             else:
-                return AppNode(func, arg)  # If not an abstraction, return as an application
+                return AppNode(reduced_func, reduced_arg), changed_func or changed_arg
 
         else:
             raise TypeError(f"Unexpected expression type: {type(expr)}")
@@ -168,14 +177,18 @@ def main():
                 raise ValueError("Expression contains uppercase letters")
             result = parser.parse(data)  # Parse the input data
             print("Initial expression:", result)
+
+            # Reduce the expression step by step
             while True:
-                new_result = reduce(result)  # Reduce the expression step by step
-                if new_result == result:  # If no more reductions, break
+                new_result, changed = reduce(result)
+                if not changed:  # If no more reductions, break
                     break
                 result = new_result
                 print("Reduced to:", result)
+
             print("Normal form:", result)  # Print the final reduced form
             print("\nTo exit, press Ctrl+D")
+
         except EOFError:
             break  # Exit on EOF (Ctrl+D)
         except ValueError as ve:
