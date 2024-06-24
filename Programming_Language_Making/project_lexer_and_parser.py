@@ -81,21 +81,26 @@ def p_expr_term(p):
     """expr : term"""
     p[0] = p[1]
 
+
 def p_expr_application(p):
     """expr : application"""
     p[0] = p[1]
+
 
 def p_expr_abstraction(p):
     """expr : abstraction"""
     p[0] = p[1]
 
+
 def p_term_var(p):
     """term : VAR"""
     p[0] = VarNode(p[1])
 
+
 def p_term_paren(p):
     """term : LPAREN expr RPAREN"""
     p[0] = p[2]
+
 
 def p_application(p):
     """application : application term
@@ -104,6 +109,7 @@ def p_application(p):
         p[0] = AppNode(p[1], p[2])
     else:
         p[0] = AppNode(p[1], p[2])
+
 
 def p_abstraction(p):
     """abstraction : LAMBDA VAR DOT expr"""
