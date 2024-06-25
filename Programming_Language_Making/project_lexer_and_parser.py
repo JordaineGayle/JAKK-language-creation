@@ -1,6 +1,11 @@
 # Import the PLY library for lexical analysis and parsing
 import ply.lex as lex
 import ply.yacc as yacc
+import openai
+import os
+# Set up OpenAI API key
+openai.api_key = os.getenv("sk-lambda-calculus-compiler-Ihy1qQe9CISPDZosR6BbT3BlbkFJBICSvEgUV1YGidF4Dx3I")
+
 
 #############################
 # TOKENS
@@ -244,9 +249,26 @@ def curry(expr):
 
 
 #############################
+# CHATGPT API FUNCTION
+#############################
+
+def chatgpt_explain(prompt):
+    response = openai.Completion.create(
+        engine="davinci-codex",
+        prompt=prompt,
+        max_tokens=150,
+        n=1,
+        stop=None,
+        temperature=0.5,
+    )
+    return response.choices[0].text.strip()
+
+
+#############################
 # RUN
 #############################
 
+# Main function to run the interpreter
 # Main function to run the interpreter
 def main():
     while True:
@@ -256,6 +278,7 @@ def main():
                 continue
             if any(c.isupper() for c in data):  # Check for uppercase letters
                 raise ValueError("Expression contains uppercase letters")
+
             lexer.input(data)  # Feed the input data to the lexer
             tokens_list = []  # Print tokens for the initial expression
             while True:
@@ -267,9 +290,14 @@ def main():
             result = parser.parse(data)  # Parse the input data
             print("Initial expression:", result)
 
+            explanation = chatgpt_explain(f"Explain the initial lambda calculus expression {result}")
+            print("Explanation:", explanation)
+
             # Curry the expression
             result = curry(result)
             print("Curried expression:", result)
+            explanation = chatgpt_explain(f"Explain the curried lambda calculus expression {result}")
+            print("Explanation:", explanation)
 
             # Reduce the expression step by step
             while True:
@@ -280,6 +308,8 @@ def main():
                         break
                 result = new_result
                 print("Reduced to:", result)
+                explanation = chatgpt_explain(f"Explain the reduced lambda calculus expression {result}")
+                print("Explanation:", explanation)
 
             print("Normal form:", result)  # Print the final reduced form
             print("\nTo exit, press Ctrl+D")
