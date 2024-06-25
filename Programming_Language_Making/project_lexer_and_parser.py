@@ -149,7 +149,7 @@ parser = yacc.yacc()
 # INTERPRETER
 #############################
 
-# Function to get free variables in an expression, recursively collects free variables from VarNode, AbsNode, & AppNode
+# Function to get free variables in an expression
 def free_vars(expr):
     if isinstance(expr, VarNode):
         return {expr.name}
@@ -186,6 +186,7 @@ def substitute(var, expr, value):
         elif expr.var in free_vars(value):
             new_var = expr.var + "'"
             new_body = alpha_convert(expr.body, expr.var, new_var)
+            print(f"Alpha Substitution: Renaming {expr.var} to {new_var}")
             return AbsNode(new_var, substitute(var, new_body, value))
         else:
             return AbsNode(expr.var, substitute(var, expr.body, value))
@@ -196,29 +197,40 @@ def substitute(var, expr, value):
 
 
 # Function to perform beta reduction on expressions, reducing them step by step to their normal form.
-def reduce(expr):
+def beta_reduce(expr):
     if isinstance(expr, VarNode):
         return expr, False
     elif isinstance(expr, AbsNode):
-        reduced_body, changed = reduce(expr.body)
+        reduced_body, changed = beta_reduce(expr.body)
         if changed:
             return AbsNode(expr.var, reduced_body), True
         else:
             return expr, False
     elif isinstance(expr, AppNode):
         if isinstance(expr.func, AbsNode):
+            print(f"Beta Reduction: Applying {expr.func} to {expr.arg}")
             reduced_expr = substitute(expr.func.var, expr.func.body, expr.arg)
+            print(f"Free Variables: {free_vars(reduced_expr)}")
             return reduced_expr, True
         else:
-            reduced_func, func_changed = reduce(expr.func)
+            reduced_func, func_changed = beta_reduce(expr.func)
             if func_changed:
                 return AppNode(reduced_func, expr.arg), True
-            reduced_arg, arg_changed = reduce(expr.arg)
+            reduced_arg, arg_changed = beta_reduce(expr.arg)
             if arg_changed:
                 return AppNode(expr.func, reduced_arg), True
             return expr, False
     else:
         raise TypeError(f"Unexpected expression type: {type(expr)}")
+
+
+# Function to check for eta reduction
+def eta_reduce(expr):
+    if isinstance(expr, AbsNode) and isinstance(expr.body, AppNode):
+        if expr.body.arg == VarNode(expr.var) and expr.var not in free_vars(expr.body.func):
+            print(f"Eta Reduction: Reducing {expr}")
+            return expr.body.func, True
+    return expr, False
 
 
 #############################
@@ -247,9 +259,11 @@ def main():
 
             # Reduce the expression step by step
             while True:
-                new_result, changed = reduce(result)
-                if not changed:  # If no more reductions, break
-                    break
+                new_result, changed = beta_reduce(result)
+                if not changed:  # If no more reductions, try eta reduction
+                    new_result, changed = eta_reduce(result)
+                    if not changed:
+                        break
                 result = new_result
                 print("Reduced to:", result)
 
