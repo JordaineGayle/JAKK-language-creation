@@ -233,6 +233,16 @@ def eta_reduce(expr):
     return expr, False
 
 
+# Function to curry a multi-argument function
+def curry(expr):
+    if isinstance(expr, AbsNode):
+        if isinstance(expr.body, AbsNode):
+            curried_expr = AbsNode(expr.var, curry(expr.body))
+            print(f"Currying: {curried_expr}")
+            return curried_expr
+    return expr
+
+
 #############################
 # RUN
 #############################
@@ -256,6 +266,10 @@ def main():
             print("Tokens:", ', '.join(tokens_list))  # Print the list of tokens
             result = parser.parse(data)  # Parse the input data
             print("Initial expression:", result)
+
+            # Curry the expression
+            result = curry(result)
+            print("Curried expression:", result)
 
             # Reduce the expression step by step
             while True:
