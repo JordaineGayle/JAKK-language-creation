@@ -20,13 +20,42 @@ st.markdown(
     unsafe_allow_html=True
 )
 
+# Function to process input code
+def process_code(input_code):
+    # Example: Simulate compilation and execution
+    console_messages = []
+
+    # Add initial console message
+    console_messages.append("Compiling...\n")
+
+    if "error" in input_code.lower():
+        console_messages.append("Syntax error: detected in input code\n")
+        output_result = ""
+    else:
+        # Example: Execute code (replace with actual execution logic)
+        output_result = f"jakk >> '{input_code}'"
+        console_messages.append("Compilation successful\n")
+
+    return console_messages, output_result
+
 # Create columns for the layout
 col1, col2 = st.columns([1, 2])  # Adjust the width ratios as needed
+
+# Initialize output_result variable
+output_result = ""
 
 # Left column for Input (IDE)
 with col1:
     st.title("INPUT (IDE)")
     input_code = st.text_area("Input Code", height=745, key="input_code")
+
+    if st.button("COMPILE"):
+        # Process the input code
+        console_messages, output_result = process_code(input_code)
+
+        # Update console and output areas
+        with st.expander("Console", expanded=True):
+            st.markdown("<br>".join(console_messages), unsafe_allow_html=True)
 
 # Right column for Output and Console
 with col2:
@@ -35,7 +64,7 @@ with col2:
 
     with output_container:
         st.title("OUTPUT")
-        output_result = st.text_area("Output Result", height=300, key="output_result")
+        st.text_area("Output Result", value=output_result, height=300, key="output_result", disabled=True)
 
     with console_container:
         st.title("CONSOLE")
@@ -47,17 +76,3 @@ with col2:
         """
         console_output.markdown(console_html, unsafe_allow_html=True)
 
-# Example of processing the input code and updating the output and console areas
-if st.button("COMPILE"):
-    # Example: Just echo the input code to output and console
-    output_result = input_code
-    console_output_str = "<div class='console'>compiling...<br>"
-    if "error" in input_code:
-        console_output_str += "<span style='color: red;'>syntax error: detected in input code</span><br>"
-    else:
-        console_output_str += "<span style='color: green;'>compilation successful</span><br>"
-    console_output_str += "</div>"
-
-    # Update the text areas with the results
-    st.session_state.output_result = output_result
-    console_output.markdown(console_output_str, unsafe_allow_html=True)
