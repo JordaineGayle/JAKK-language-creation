@@ -32,7 +32,7 @@ console_output_str = "<div class='console'>Waiting for compilation...</div>"
 with col2:
     st.title("OUTPUT")
     output_result = st.empty()
-
+    output_result.text_area("", value="Hello World!", height=300, key="output_result", disabled=True)
 
     st.title("CONSOLE")
     console_output = st.empty()
@@ -51,4 +51,4 @@ with col1:
         console_output.markdown(f"<div class='console'>{console_output_str}</div>", unsafe_allow_html=True)
 
         # Display the final output result
-        output_result.text_area("", value=f"Normal form: {final_result}", height=300, key="output_result", disabled=True)
+        output_result.text_area("", value=f"Normal form: {final_result}", height=300, key="output_result_compiled", disabled=True)
