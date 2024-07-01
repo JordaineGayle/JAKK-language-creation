@@ -1,11 +1,8 @@
 # Import the PLY library for lexical analysis and parsing
 import ply.lex as lex
 import ply.yacc as yacc
-import openai
-import os
-# Set up OpenAI API key
-openai.api_key = os.getenv("sk-lambda-calculus-compiler-Ihy1qQe9CISPDZosR6BbT3BlbkFJBICSvEgUV1YGidF4Dx3I")
-
+import io
+import sys
 
 #############################
 # TOKENS
@@ -163,7 +160,7 @@ def free_vars(expr):
     elif isinstance(expr, AppNode):
         return free_vars(expr.func) | free_vars(expr.arg)
     else:
-        raise TypeError(f"Unexpected expression type: {type(expr)}")
+        raise TypeError(f"\nUnexpected expression type: {type(expr)}")
 
 
 # Function to get bound variables in an expression
@@ -178,7 +175,7 @@ def bound_vars(expr, bound=None):
     elif isinstance(expr, AppNode):
         return bound_vars(expr.func, bound) | bound_vars(expr.arg, bound)
     else:
-        raise TypeError(f"Unexpected expression type: {type(expr)}")
+        raise TypeError(f"\nUnexpected expression type: {type(expr)}")
 
 
 # Function to perform alpha conversion, renaming bound variables to avoid conflicts.
@@ -193,7 +190,7 @@ def alpha_convert(expr, old_var, new_var):
     elif isinstance(expr, AppNode):
         return AppNode(alpha_convert(expr.func, old_var, new_var), alpha_convert(expr.arg, old_var, new_var))
     else:
-        raise TypeError(f"Unexpected expression type: {type(expr)}")
+        raise TypeError(f"\nUnexpected expression type: {type(expr)}")
 
 
 # Function to substitute a variable in an expression with another expression, avoiding capture
@@ -206,14 +203,14 @@ def substitute(var, expr, value):
         elif expr.var in free_vars(value):
             new_var = expr.var + "'"
             new_body = alpha_convert(expr.body, expr.var, new_var)
-            print(f"Alpha Substitution: Renaming {expr.var} to {new_var}")
+            print(f"\nAlpha Substitution: Renaming {expr.var} to {new_var}")
             return AbsNode(new_var, substitute(var, new_body, value))
         else:
             return AbsNode(expr.var, substitute(var, expr.body, value))
     elif isinstance(expr, AppNode):
         return AppNode(substitute(var, expr.func, value), substitute(var, expr.arg, value))
     else:
-        raise TypeError(f"Unexpected expression type: {type(expr)}")
+        raise TypeError(f"\nUnexpected expression type: {type(expr)}")
 
 
 # Function to perform beta reduction on expressions, reducing them step by step to their normal form.
@@ -228,9 +225,8 @@ def beta_reduce(expr):
             return expr, False
     elif isinstance(expr, AppNode):
         if isinstance(expr.func, AbsNode):
-            print(f"Beta Reduction: Applying {expr.func} to {expr.arg}")
+            print(f"\nBeta Reduction: Applying {expr.arg} to {expr.func}")
             reduced_expr = substitute(expr.func.var, expr.func.body, expr.arg)
-            print(f"Free Variables: {free_vars(reduced_expr)}")
             return reduced_expr, True
         else:
             reduced_func, func_changed = beta_reduce(expr.func)
@@ -241,14 +237,14 @@ def beta_reduce(expr):
                 return AppNode(expr.func, reduced_arg), True
             return expr, False
     else:
-        raise TypeError(f"Unexpected expression type: {type(expr)}")
+        raise TypeError(f"\nUnexpected expression type: {type(expr)}")
 
 
 # Function to check for eta reduction
 def eta_reduce(expr):
     if isinstance(expr, AbsNode) and isinstance(expr.body, AppNode):
         if expr.body.arg == VarNode(expr.var) and expr.var not in free_vars(expr.body.func):
-            print(f"Eta Reduction: Reducing {expr}")
+            print(f"\nEta Reduction: Reducing {expr}")
             return expr.body.func, True
     return expr, False
 
@@ -258,25 +254,9 @@ def curry(expr):
     if isinstance(expr, AbsNode):
         if isinstance(expr.body, AbsNode):
             curried_expr = AbsNode(expr.var, curry(expr.body))
-            print(f"Currying: {curried_expr}")
+            print(f"\nCurrying: {curried_expr}")
             return curried_expr
     return expr
-
-
-#############################
-# CHATGPT API FUNCTION
-#############################
-
-def chatgpt_explain(prompt):
-    response = openai.Completion.create(
-        engine="davinci-codex",
-        prompt=prompt,
-        max_tokens=150,
-        n=1,
-        stop=None,
-        temperature=0.5,
-    )
-    return response.choices[0].text.strip()
 
 
 #############################
@@ -284,63 +264,62 @@ def chatgpt_explain(prompt):
 #############################
 
 # Main function to run the interpreter
-# Main function to run the interpreter
-def main():
-    while True:
-        try:
-            data = input("\nEnter expression: ")
-            if not data:
-                continue
-            if any(c.isupper() for c in data):  # Check for uppercase letters
-                raise ValueError("Expression contains uppercase letters")
+def main(input_code):
 
-            lexer.input(data)  # Feed the input data to the lexer
-            tokens_list = []  # Print tokens for the initial expression
-            while True:
-                tok = lexer.token()  # Get the next token
-                if not tok:
-                    break  # No more tokens
-                tokens_list.append(tok.type)
-            print("Tokens:", ', '.join(tokens_list))  # Print the list of tokens
-            result = parser.parse(data)  # Parse the input data
-            print("Initial expression:", result)
+    # Redirect stdout to capture print statements
+    old_stdout = sys.stdout
+    new_stdout = io.StringIO()
+    sys.stdout = new_stdout
 
-            explanation = chatgpt_explain(f"Explain the initial lambda calculus expression {result}")
-            print("Explanation:", explanation)
+    try:
+        if any(c.isupper() for c in input_code):  # Check for uppercase letters
+            raise ValueError("\nExpression contains uppercase letters")
+        lexer.input(input_code)  # Feed the input data to the lexer
+        tokens_list = []  # Print tokens for the initial expression
+        while True:
+            tok = lexer.token()  # Get the next token
+            if not tok:
+                break  # No more tokens
+            tokens_list.append(tok.type)
+        print("\n\nTokens:", ', '.join(tokens_list))  # Print the list of tokens
+        result = parser.parse(input_code)  # Parse the input data
+        print("\n\nInitial expression:", result)
 
-            # Curry the expression
-            result = curry(result)
-            print("Curried expression:", result)
-            explanation = chatgpt_explain(f"Explain the curried lambda calculus expression {result}")
-            print("Explanation:", explanation)
+        # Identify free and bound variables
+        free = free_vars(result)
+        bound = bound_vars(result)
+        print("\nFree variables:", free)
+        print("\nBound variables:", bound)
 
-            # Reduce the expression step by step
-            while True:
-                new_result, changed = beta_reduce(result)
-                if not changed:  # If no more reductions, try eta reduction
-                    new_result, changed = eta_reduce(result)
-                    if not changed:
-                        break
-                result = new_result
-                print("Reduced to:", result)
-                explanation = chatgpt_explain(f"Explain the reduced lambda calculus expression {result}")
-                print("Explanation:", explanation)
+        # Curry the expression
+        result = curry(result)
+        print("\nCurried expression:", result)
 
-            print("Normal form:", result)  # Print the final reduced form
-            print("\nTo exit, press Ctrl+D")
+        # Reduce the expression step by step
+        while True:
+            new_result, changed = beta_reduce(result)
+            if not changed:  # If no more reductions, try eta reduction
+                new_result, changed = eta_reduce(result)
+                if not changed:
+                    break
+            result = new_result
+            print("\nReduced to:", result)
 
-        except EOFError:
-            break  # Exit on EOF (Ctrl+D)
-        except ValueError as ve:
-            print(f"Input error: {ve}")
-        except SyntaxError as se:
-            print(f"Syntax error: {se}")
-        except Exception as e:
-            print(f"Error: {e}")
+        print("\nNormal form:", result)  # Print the final reduced form
+    except ValueError as ve:
+        print(f"\nInput error: {ve}")
+    except SyntaxError as se:
+        print(f"\nSyntax error: {se}")
+    except Exception as e:
+        print(f"\nError: {e}")
+    finally:
+        # Restore stdout
+        sys.stdout = old_stdout
 
     # Get the console output
     console_output = new_stdout.getvalue()
     return console_output, result
+
 
 # If the script is run directly, execute the main function
 if __name__ == "__main__":
