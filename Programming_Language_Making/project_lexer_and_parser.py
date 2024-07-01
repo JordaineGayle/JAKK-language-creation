@@ -1,6 +1,11 @@
 # Import the PLY library for lexical analysis and parsing
 import ply.lex as lex
 import ply.yacc as yacc
+import openai
+import os
+# Set up OpenAI API key
+openai.api_key = os.getenv("sk-lambda-calculus-compiler-Ihy1qQe9CISPDZosR6BbT3BlbkFJBICSvEgUV1YGidF4Dx3I")
+
 
 #############################
 # TOKENS
@@ -223,8 +228,9 @@ def beta_reduce(expr):
             return expr, False
     elif isinstance(expr, AppNode):
         if isinstance(expr.func, AbsNode):
-            print(f"Beta Reduction: Applying {expr.arg} to {expr.func}")
+            print(f"Beta Reduction: Applying {expr.func} to {expr.arg}")
             reduced_expr = substitute(expr.func.var, expr.func.body, expr.arg)
+            print(f"Free Variables: {free_vars(reduced_expr)}")
             return reduced_expr, True
         else:
             reduced_func, func_changed = beta_reduce(expr.func)
@@ -258,9 +264,26 @@ def curry(expr):
 
 
 #############################
+# CHATGPT API FUNCTION
+#############################
+
+def chatgpt_explain(prompt):
+    response = openai.Completion.create(
+        engine="davinci-codex",
+        prompt=prompt,
+        max_tokens=150,
+        n=1,
+        stop=None,
+        temperature=0.5,
+    )
+    return response.choices[0].text.strip()
+
+
+#############################
 # RUN
 #############################
 
+# Main function to run the interpreter
 # Main function to run the interpreter
 def main():
     while True:
@@ -282,15 +305,14 @@ def main():
             result = parser.parse(data)  # Parse the input data
             print("Initial expression:", result)
 
-            # Identify free and bound variables
-            free = free_vars(result)
-            bound = bound_vars(result)
-            print("Free variables:", free)
-            print("Bound variables:", bound)
+            explanation = chatgpt_explain(f"Explain the initial lambda calculus expression {result}")
+            print("Explanation:", explanation)
 
             # Curry the expression
             result = curry(result)
             print("Curried expression:", result)
+            explanation = chatgpt_explain(f"Explain the curried lambda calculus expression {result}")
+            print("Explanation:", explanation)
 
             # Reduce the expression step by step
             while True:
@@ -301,6 +323,8 @@ def main():
                         break
                 result = new_result
                 print("Reduced to:", result)
+                explanation = chatgpt_explain(f"Explain the reduced lambda calculus expression {result}")
+                print("Explanation:", explanation)
 
             print("Normal form:", result)  # Print the final reduced form
             print("\nTo exit, press Ctrl+D")
@@ -314,6 +338,9 @@ def main():
         except Exception as e:
             print(f"Error: {e}")
 
+    # Get the console output
+    console_output = new_stdout.getvalue()
+    return console_output, result
 
 # If the script is run directly, execute the main function
 if __name__ == "__main__":
