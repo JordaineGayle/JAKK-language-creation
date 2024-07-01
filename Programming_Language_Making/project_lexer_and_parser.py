@@ -138,9 +138,9 @@ def p_abstraction(p):
 # Error rule for syntax errors
 def p_error(p):
     if p:
-        print(f"Syntax error near token '{p.value}' at line {p.lineno}, position {p.lexpos}")
+        print(f"\nSyntax error near token '{p.value}' at line {p.lineno}, position {p.lexpos}")
     else:
-        print("Syntax error at EOF")
+        print("\nSyntax error at EOF")
 
 
 # Build the parser
@@ -156,7 +156,15 @@ def free_vars(expr):
     if isinstance(expr, VarNode):
         return {expr.name}
     elif isinstance(expr, AbsNode):
-        return free_vars(expr.body) - {expr.var}
+        # Get the free variables in the body and head
+        body = free_vars(expr.body)
+        head = expr.var
+
+        # If the head variable is not the same as the body variable, treat it as free
+        if head not in body:
+            return body | {head}
+        else:
+            return body - {head}
     elif isinstance(expr, AppNode):
         return free_vars(expr.func) | free_vars(expr.arg)
     else:
@@ -309,7 +317,7 @@ def main(input_code):
     except ValueError as ve:
         print(f"\nInput error: {ve}")
     except SyntaxError as se:
-        print(f"\nSyntax error: {se}")
+        print(f"\n\nSyntax error: {se}")
     except Exception as e:
         print(f"\nError: {e}")
     finally:
