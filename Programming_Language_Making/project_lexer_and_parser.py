@@ -178,7 +178,9 @@ def bound_vars(expr, bound=None):
     if isinstance(expr, VarNode):
         return bound
     elif isinstance(expr, AbsNode):
-        bound.add(expr.var)
+        # Only add the variable to bound if it appears in the body
+        if expr.var in free_vars(expr.body):
+            bound.add(expr.var)
         return bound_vars(expr.body, bound)
     elif isinstance(expr, AppNode):
         return bound_vars(expr.func, bound) | bound_vars(expr.arg, bound)
