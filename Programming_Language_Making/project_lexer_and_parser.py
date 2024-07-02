@@ -3,6 +3,7 @@ import ply.lex as lex
 import ply.yacc as yacc
 import io
 import sys
+import string
 
 #############################
 # TOKENS
@@ -188,37 +189,55 @@ def bound_vars(expr, bound=None):
         raise TypeError(f"\nUnexpected expression type: {type(expr)}")
 
 
+def generate_new_var(old_var, used_vars):
+    # All lowercase letters
+    all_vars = set(string.ascii_lowercase)
+    # Exclude old_var and any other used variables
+    available_vars = all_vars - {old_var} - used_vars
+    if not available_vars:
+        raise ValueError("No available variables for alpha conversion.")
+    # Return an available variable
+    return available_vars.pop()
+
+
 # Function to perform alpha conversion, renaming bound variables to avoid conflicts.
-def alpha_convert(expr, old_var, new_var):
+def alpha_convert(expr, old_var, used_vars=None):
+    if used_vars is None:
+        used_vars = set()
+
     if isinstance(expr, VarNode):
-        return VarNode(new_var) if expr.name == old_var else expr
+        return VarNode(expr.name) if expr.name != old_var else expr
     elif isinstance(expr, AbsNode):
+        new_var = generate_new_var(old_var, used_vars) if expr.var == old_var else expr.var
+        used_vars.add(new_var)
         if expr.var == old_var:
-            return AbsNode(new_var, alpha_convert(expr.body, old_var, new_var))
+            return AbsNode(new_var, alpha_convert(expr.body, old_var, used_vars))
         else:
-            return AbsNode(expr.var, alpha_convert(expr.body, old_var, new_var))
+            return AbsNode(expr.var, alpha_convert(expr.body, old_var, used_vars))
     elif isinstance(expr, AppNode):
-        return AppNode(alpha_convert(expr.func, old_var, new_var), alpha_convert(expr.arg, old_var, new_var))
+        return AppNode(alpha_convert(expr.func, old_var, used_vars), alpha_convert(expr.arg, old_var, used_vars))
     else:
         raise TypeError(f"\nUnexpected expression type: {type(expr)}")
 
 
 # Function to substitute a variable in an expression with another expression, avoiding capture
-def substitute(var, expr, value):
+def substitute(var, expr, value, used_vars=None):
+    if used_vars is None:
+        used_vars = set()
     if isinstance(expr, VarNode):
         return value if expr.name == var else expr
     elif isinstance(expr, AbsNode):
         if expr.var == var:
             return expr  # No substitution if the variable is bound in this abstraction
         elif expr.var in free_vars(value):
-            new_var = expr.var + "'"
+            new_var = generate_new_var(expr.var, used_vars)
             new_body = alpha_convert(expr.body, expr.var, new_var)
             print(f"\nAlpha Substitution: Renaming {expr.var} to {new_var}")
-            return AbsNode(new_var, substitute(var, new_body, value))
+            return AbsNode(new_var, substitute(var, new_body, value, used_vars))
         else:
-            return AbsNode(expr.var, substitute(var, expr.body, value))
+            return AbsNode(expr.var, substitute(var, expr.body, value, used_vars))
     elif isinstance(expr, AppNode):
-        return AppNode(substitute(var, expr.func, value), substitute(var, expr.arg, value))
+        return AppNode(substitute(var, expr.func, value, used_vars), substitute(var, expr.arg, value, used_vars))
     else:
         raise TypeError(f"\nUnexpected expression type: {type(expr)}")
 
@@ -275,7 +294,6 @@ def curry(expr):
 
 # Main function to run the interpreter
 def main(input_code):
-
     # Redirect stdout to capture print statements
     old_stdout = sys.stdout
     new_stdout = io.StringIO()
