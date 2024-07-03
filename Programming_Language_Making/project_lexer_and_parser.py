@@ -272,9 +272,10 @@ def beta_reduce(expr):
 # Function to check for eta reduction
 def eta_reduce(expr):
     if isinstance(expr, AbsNode) and isinstance(expr.body, AppNode):
-        if expr.body.arg == VarNode(expr.var) and expr.var not in free_vars(expr.body.func):
-            print(f"\nEta Reduction: Reducing {expr}")
-            return expr.body.func, True
+        if isinstance(expr.body.arg, VarNode) and expr.body.arg.name == expr.var:
+            if expr.var not in free_vars(expr.body.func):
+                print(f"\nEta Reduction: Reducing {expr}")
+                return expr.body.func, True
     return expr, False
 
 
