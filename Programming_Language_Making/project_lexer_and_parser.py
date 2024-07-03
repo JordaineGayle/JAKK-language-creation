@@ -206,7 +206,7 @@ def alpha_convert(expr, old_var, used_vars=None):
         used_vars = set()
 
     if isinstance(expr, VarNode):
-        return VarNode(expr.name) if expr.name != old_var else expr
+        return VarNode(expr.name) if expr.name == old_var else expr
     elif isinstance(expr, AbsNode):
         new_var = generate_new_var(old_var, used_vars) if expr.var == old_var else expr.var
         used_vars.add(new_var)
@@ -221,23 +221,23 @@ def alpha_convert(expr, old_var, used_vars=None):
 
 
 # Function to substitute a variable in an expression with another expression, avoiding capture
-def substitute(var, expr, value, used_vars=None):
+def substitute(var, expr, replacement, used_vars=None):
     if used_vars is None:
         used_vars = set()
     if isinstance(expr, VarNode):
-        return value if expr.name == var else expr
+        return replacement if expr.name == var else expr
     elif isinstance(expr, AbsNode):
         if expr.var == var:
             return expr  # No substitution if the variable is bound in this abstraction
-        elif expr.var in free_vars(value):
+        elif expr.var in free_vars(replacement):
             new_var = generate_new_var(expr.var, used_vars)
             new_body = alpha_convert(expr.body, expr.var, new_var)
             print(f"\nAlpha Substitution: Renaming {expr.var} to {new_var}")
-            return AbsNode(new_var, substitute(var, new_body, value, used_vars))
+            return AbsNode(new_var, substitute(var, new_body, replacement, used_vars))
         else:
-            return AbsNode(expr.var, substitute(var, expr.body, value, used_vars))
+            return AbsNode(expr.var, substitute(var, expr.body, replacement, used_vars))
     elif isinstance(expr, AppNode):
-        return AppNode(substitute(var, expr.func, value, used_vars), substitute(var, expr.arg, value, used_vars))
+        return AppNode(substitute(var, expr.func, replacement, used_vars), substitute(var, expr.arg, replacement, used_vars))
     else:
         raise TypeError(f"\nUnexpected expression type: {type(expr)}")
 
