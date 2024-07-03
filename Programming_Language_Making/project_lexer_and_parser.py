@@ -315,9 +315,16 @@ def main(input_code):
 
         # Identify free and bound variables
         free = free_vars(result)
+        if not free:
+            print("\nFree variables: None")
+        else:
+            print("\nFree variables:", free)
+
         bound = bound_vars(result)
-        print("\nFree variables:", free)
-        print("\nBound variables:", bound)
+        if not bound:
+            print("\nBound variables: None")
+        else:
+            print("\nBound variables:", bound)
 
         # Curry the expression
         result = curry(result)
