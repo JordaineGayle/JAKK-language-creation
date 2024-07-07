@@ -237,7 +237,8 @@ def substitute(var, expr, replacement, used_vars=None):
         else:
             return AbsNode(expr.var, substitute(var, expr.body, replacement, used_vars))
     elif isinstance(expr, AppNode):
-        return AppNode(substitute(var, expr.func, replacement, used_vars), substitute(var, expr.arg, replacement, used_vars))
+        return AppNode(substitute(var, expr.func, replacement, used_vars),
+                       substitute(var, expr.arg, replacement, used_vars))
     else:
         raise TypeError(f"\nUnexpected expression type: {type(expr)}")
 
@@ -310,6 +311,7 @@ def main(input_code):
             if not tok:
                 break  # No more tokens
             tokens_list.append(tok.type)
+
         print("\n\nTokens:", ', '.join(tokens_list))  # Print the list of tokens
         result = parser.parse(input_code)  # Parse the input data
         print("\n\nInitial expression:", result)
