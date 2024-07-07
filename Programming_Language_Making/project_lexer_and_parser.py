@@ -290,6 +290,17 @@ def curry(expr):
     return expr
 
 
+def parse_tree_str(node):
+    if isinstance(node, VarNode):
+        return f"Variable('{node.name}')"
+    elif isinstance(node, AppNode):
+        return f"Application({parse_tree_str(node.func)}, {parse_tree_str(node.arg)})"
+    elif isinstance(node, AbsNode):
+        return f"Abstraction('{node.var}', {parse_tree_str(node.body)})"
+    else:
+        raise TypeError(f"Unexpected node type: {type(node)}")
+
+
 #############################
 # RUN
 #############################
@@ -304,6 +315,8 @@ def main(input_code):
     try:
         if any(c.isupper() for c in input_code):  # Check for uppercase letters
             raise ValueError("\nExpression contains uppercase letters")
+
+        # Parse Tree Generator
         lexer.input(input_code)  # Feed the input data to the lexer
         tokens_list = []  # Print tokens for the initial expression
         while True:
@@ -314,7 +327,8 @@ def main(input_code):
 
         print("\n\nTokens:", ', '.join(tokens_list))  # Print the list of tokens
         result = parser.parse(input_code)  # Parse the input data
-        print("\n\nInitial expression:", result)
+        print("\nParse Tree:")
+        print(f"Start expression {input_code} -> {parse_tree_str(result)}")
 
         # Identify free and bound variables
         free = free_vars(result)
