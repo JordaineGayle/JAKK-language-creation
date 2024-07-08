@@ -374,5 +374,5 @@ def main(input_code):
 
 
 # If the script is run directly, execute the main function
-if __name__ == "__main__":
-    main()
+# if __name__ == "__main__":
+#     main()

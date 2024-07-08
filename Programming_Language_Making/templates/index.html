@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>JAKK Interpreter</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='styles/style.css') }}"/>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 </head>
 <body>
@@ -27,25 +27,23 @@
     </div>
 
     <script>
-           $(document).ready(function() {
-            $('#compile_button').click(function() {
-                var inputCode = $('#input_code').val();
-                var button = $(this);
-                button.addClass('clicked');
-                $.ajax({
-                    type: 'POST',
-                    url: '/compile',
-                    data: { input_code: inputCode },
-                    success: function(response) {
-                        $('#console_output').html(response.console_output);
-                        $('#output_result').val('Normal form: ' + response.final_result);
-                        button.removeClass('clicked'); // Reset button color
-                    },
-                    error: function() {
-                        button.removeClass('clicked'); // Reset button color on error
-                    }
-                });
-            });
+        function compileCode() {
+            var inputCode = document.getElementsByName("input_code")[0].value;
+
+            fetch('/jakk', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: 'input_code=' + encodeURIComponent(inputCode)
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('consoleOutput').innerHTML = data.console_output_str;
+                document.getElementById('finalResult').value = "Normal form: " + data.final_result;
+            })
+            .catch(error => console.error('Error:', error));
+        }
     </script>
 </body>
 </html>
