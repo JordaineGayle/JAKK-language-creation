@@ -13,6 +13,7 @@ body {
     height: calc(100vh - 20px);
     padding: 10px;
     box-sizing: border-box;
+
 }
 
 .left-column, .ai_column, .right-column {
@@ -41,6 +42,7 @@ textarea {
     border: 1px solid #ccc;
     resize: none;
     box-sizing: border-box;
+    font-size: 16px;
 }
 
 #input_code, #ai_code {
@@ -77,4 +79,5 @@ button:active {
     height: 70%;
     overflow-y: auto;
     margin-top: 10px;
+    font-size: 14px;
 }

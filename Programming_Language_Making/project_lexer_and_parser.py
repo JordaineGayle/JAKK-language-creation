@@ -327,7 +327,7 @@ def main(input_code):
 
         print("Tokens:", ', '.join(tokens_list))  # Print the list of tokens
         result = parser.parse(input_code)  # Parse the input data
-        print("Parse Tree:")
+        print("\nParse Tree:")
         print(f"Start expression {input_code} -> {parse_tree_str(result)}")  # Print Parse Tree
 
         # Identify free and bound variables
