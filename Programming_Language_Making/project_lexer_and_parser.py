@@ -9,13 +9,13 @@ import string
 # TOKENS
 #############################
 
-# Define tokens that the lexer will recognize
+# Define lexer tokens for the language
 tokens = (
     'VAR', 'LAMBDA', 'DOT', 'LPAREN', 'RPAREN'
 )
 
 
-# Regular expression rules for simple tokens
+# Regular expression rules for the tokens
 def t_VAR(t):
     r"""[a-z]"""
     return t
@@ -41,22 +41,16 @@ def t_RPAREN(t):
     return t
 
 
-t_ignore = ' \t'  # A string containing ignored characters (spaces and tabs)
+t_ignore = ' \t'  # to ignored characters (spaces and tabs)
 
 
 #############################
 # LEXER
 #############################
 
-# Rule for handling newlines
-def t_newline(t):
-    r"""\n+"""
-    t.lexer.lineno += len(t.value)
-
-
 # Error handling rule for illegal characters
 def t_error(t):
-    print(f"Illegal Character or Unknown Token '{t.value[0]}'")
+    print(f"\n\nIllegal Character or Unknown Token '{t.value[0]}'")
     t.lexer.skip(1)
 
 
@@ -157,7 +151,7 @@ def free_vars(expr):
     if isinstance(expr, VarNode):
         return {expr.name}
     elif isinstance(expr, AbsNode):
-        # Get the free variables in the body and head
+        # Get the free variables in the body and head of the expression
         body = free_vars(expr.body)
         head = expr.var
 
@@ -190,9 +184,8 @@ def bound_vars(expr, bound=None):
 
 
 def generate_new_var(old_var, used_vars):
-    # All lowercase letters
     all_vars = set(string.ascii_lowercase)
-    # Exclude old_var and any other used variables
+    # Exclude old and used variables from the 'all variables' set
     available_vars = all_vars - {old_var} - used_vars
     if not available_vars:
         raise ValueError("No available variables for alpha conversion.")
@@ -208,19 +201,22 @@ def alpha_convert(expr, old_var, used_vars=None):
     if isinstance(expr, VarNode):
         return VarNode(expr.name) if expr.name == old_var else expr
     elif isinstance(expr, AbsNode):
-        new_var = generate_new_var(old_var, used_vars) if expr.var == old_var else expr.var
+        new_var = generate_new_var(old_var, used_vars) if expr.var == old_var \
+            else expr.var
         used_vars.add(new_var)
         if expr.var == old_var:
             return AbsNode(new_var, alpha_convert(expr.body, old_var, used_vars))
         else:
             return AbsNode(expr.var, alpha_convert(expr.body, old_var, used_vars))
     elif isinstance(expr, AppNode):
-        return AppNode(alpha_convert(expr.func, old_var, used_vars), alpha_convert(expr.arg, old_var, used_vars))
+        return AppNode(alpha_convert(expr.func, old_var, used_vars),
+                       alpha_convert(expr.arg, old_var, used_vars))
     else:
         raise TypeError(f"\nUnexpected expression type: {type(expr)}")
 
 
-# Function to substitute a variable in an expression with another expression, avoiding capture
+# Function to substitute a variable in an expression with another expression,
+# avoiding capture
 def substitute(var, expr, replacement, used_vars=None):
     if used_vars is None:
         used_vars = set()
@@ -243,7 +239,8 @@ def substitute(var, expr, replacement, used_vars=None):
         raise TypeError(f"\nUnexpected expression type: {type(expr)}")
 
 
-# Function to perform beta reduction on expressions, reducing them step by step to their normal form.
+# Function to perform beta reduction on expressions,
+# reducing them step by step to their normal form.
 def beta_reduce(expr):
     if isinstance(expr, VarNode):
         return expr, False
@@ -290,6 +287,7 @@ def curry(expr):
     return expr
 
 
+# Function to construct the parse tree/ abstract syntax tree (AST)
 def parse_tree_str(node):
     if isinstance(node, VarNode):
         return f"Variable('{node.name}')"
@@ -328,7 +326,7 @@ def main(input_code):
         print("\n\nTokens:", ', '.join(tokens_list))  # Print the list of tokens
         result = parser.parse(input_code)  # Parse the input data
         print("\nParse Tree:")
-        print(f"Start expression {input_code} -> {parse_tree_str(result)}")
+        print(f"Start expression {input_code} -> {parse_tree_str(result)}")  # Print Parse Tree
 
         # Identify free and bound variables
         free = free_vars(result)
