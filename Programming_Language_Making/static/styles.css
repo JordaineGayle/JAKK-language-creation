@@ -50,7 +50,8 @@ textarea {
 }
 
 #output_result {
-    height: 50%;
+
+    height: 10%;
     margin-bottom: 10px;
 }
 
@@ -73,7 +74,7 @@ button:active {
     color: white;
     padding: 10px;
     border-radius: 5px;
-    height: 50%;
+    height: 70%;
     overflow-y: auto;
     margin-top: 10px;
 }

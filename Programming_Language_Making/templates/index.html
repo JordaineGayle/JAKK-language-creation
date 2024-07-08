@@ -27,23 +27,15 @@
     </div>
 
     <script>
-        function compileCode() {
-            var inputCode = document.getElementsByName("input_code")[0].value;
-
-            fetch('/jakk', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                },
-                body: 'input_code=' + encodeURIComponent(inputCode)
-            })
-            .then(response => response.json())
-            .then(data => {
-                document.getElementById('consoleOutput').innerHTML = data.console_output_str;
-                document.getElementById('finalResult').value = "Normal form: " + data.final_result;
-            })
-            .catch(error => console.error('Error:', error));
-        }
+        $(document).ready(function(){
+            $('#compile_button').click(function(){
+                var inputCode = $('#input_code').val();
+                $.post('/jakk', {input_code: inputCode}, function(data){
+                    $('#console_output').html(data.console_output_str.replace(/\n/g, '<br>'));
+                    $('#output_result').val("Normal form: " + data.final_result);
+                });
+            });
+        });
     </script>
 </body>
 </html>
