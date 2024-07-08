@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JAKK Interpreter</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/style.css') }}"/>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+       <div class="container">
+           <div class="left-column">
+               <h1>INPUT (IDE)</h1>
+               <textarea id="input_code"></textarea>
+               <button id="compile_button">COMPILE</button>
+           </div>
+           <div class="right-column">
+                <h1>OUTPUT</h1>
+                <textarea id="output_result" readonly>Hello World!</textarea>
+                <h1>CONSOLE</h1>
+                <div id="console_output" class="console">Waiting for compilation...</div>
+            </div>
+           <div class="ai_column">
+                <h1>AI GENERATOR</h1>
+                <textarea id="ai_code"></textarea>
+           </div>
+    </div>
+
+    <script>
+           $(document).ready(function() {
+            $('#compile_button').click(function() {
+                var inputCode = $('#input_code').val();
+                var button = $(this);
+                button.addClass('clicked');
+                $.ajax({
+                    type: 'POST',
+                    url: '/compile',
+                    data: { input_code: inputCode },
+                    success: function(response) {
+                        $('#console_output').html(response.console_output);
+                        $('#output_result').val('Normal form: ' + response.final_result);
+                        button.removeClass('clicked'); // Reset button color
+                    },
+                    error: function() {
+                        button.removeClass('clicked'); // Reset button color on error
+                    }
+                });
+            });
+    </script>
+</body>
+</html>

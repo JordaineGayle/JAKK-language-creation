@@ -310,6 +310,8 @@ def main(input_code):
     new_stdout = io.StringIO()
     sys.stdout = new_stdout
 
+    result = None  # Initialize result variable
+
     try:
         if any(c.isupper() for c in input_code):  # Check for uppercase letters
             raise ValueError("\nExpression contains uppercase letters")
