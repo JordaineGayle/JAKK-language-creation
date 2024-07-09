@@ -53,9 +53,15 @@ t_ignore = ' \t'  # to ignore characters (spaces and tabs)
 # LEXER
 #############################
 
+#Handles new lines
+def t_newline(t):
+    r'\n+'
+    t.lexer.lineno += t.value.count("\n")
+
+
 # Error handling rule for illegal characters
 def t_error(t):
-    print(f"\nIllegal Character or Unknown Token '{t.value[0]}'")
+    print(f"\n\nIllegal Character or Unknown Token '{t.value[0]}'")
     t.lexer.skip(1)
 
 
@@ -268,7 +274,7 @@ def substitute(var, expr, replacement, used_vars=None):
 # Function to perform beta reduction on expressions,
 # reducing them step by step to their normal form.
 def beta_reduce(expr):
-    if isinstance(expr, VarNode) or isinstance(expr,ArgNode):
+    if isinstance(expr, VarNode) or isinstance(expr, ArgNode):
         return expr, False
     elif isinstance(expr, AbsNode):
         reduced_body, changed = beta_reduce(expr.body)
