@@ -53,9 +53,9 @@ t_ignore = ' \t'  # to ignore characters (spaces and tabs)
 # LEXER
 #############################
 
-#Handles new lines
+# Handles new lines
 def t_newline(t):
-    r'\n+'
+    r"""\n+"""
     t.lexer.lineno += t.value.count("\n")
 
 
