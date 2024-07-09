@@ -11,13 +11,18 @@ import string
 
 # Define lexer tokens for the language
 tokens = (
-    'VAR', 'LAMBDA', 'DOT', 'LPAREN', 'RPAREN'
+    'VAR', 'ARG', 'LAMBDA', 'DOT', 'LPAREN', 'RPAREN'
 )
 
 
 # Regular expression rules for the tokens
 def t_VAR(t):
     r"""[a-z]"""
+    return t
+
+
+def t_ARG(t):
+    r"""[0-9]+"""
     return t
 
 
@@ -41,7 +46,7 @@ def t_RPAREN(t):
     return t
 
 
-t_ignore = ' \t'  # to ignored characters (spaces and tabs)
+t_ignore = ' \t'  # to ignore characters (spaces and tabs)
 
 
 #############################
@@ -69,6 +74,14 @@ class VarNode:
 
     def __repr__(self):
         return self.name
+
+
+class ArgNode:
+    def __init__(self, value):
+        self.value = value
+
+    def __repr__(self):
+        return self.value
 
 
 # Function Application
@@ -113,6 +126,11 @@ def p_expr_abstraction(p):
 def p_term_var(p):
     """term : VAR"""
     p[0] = VarNode(p[1])
+
+
+def p_term_arg(p):
+    """term : ARG"""
+    p[0] = ArgNode(p[1])
 
 
 def p_term_paren(p):
@@ -291,6 +309,8 @@ def curry(expr):
 def parse_tree_str(node):
     if isinstance(node, VarNode):
         return f"Variable('{node.name}')"
+    elif isinstance(node, ArgNode):
+        return f"Argument('{node.value}')"
     elif isinstance(node, AppNode):
         return f"Application({parse_tree_str(node.func)}, {parse_tree_str(node.arg)})"
     elif isinstance(node, AbsNode):
@@ -371,7 +391,6 @@ def main(input_code):
     # Get the console output
     console_output = new_stdout.getvalue()
     return console_output, result
-
 
 # If the script is run directly, execute the main function
 # if __name__ == "__main__":
