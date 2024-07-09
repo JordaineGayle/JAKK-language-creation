@@ -313,9 +313,13 @@ def eta_reduce(expr):
 def curry(expr):
     if isinstance(expr, AbsNode):
         if isinstance(expr.body, AbsNode):
-            curried_expr = AbsNode(expr.var, curry(expr.body))
-            print(f"\nCurrying: {curried_expr}")
-            return curried_expr
+            curried_body = curry(expr.body)
+            if curried_body is not expr.body:
+                # If the body has been curried, create a new abstraction node
+                curried_expr = AbsNode(expr.var, curried_body)
+                print(f"\nCurrying: {curried_expr}")
+                return curried_expr
+        return expr
     return expr
 
 
