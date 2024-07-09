@@ -25,7 +25,6 @@
     padding: 10px; /* Padding around the text */
 }
 
-
 body {
     font-family: Arial, sans-serif;
     margin: 0;
@@ -41,7 +40,6 @@ body {
     height: calc(100vh - 20px);
     padding: 10px;
     box-sizing: border-box;
-
 }
 
 .left-column, .ai_column, .right-column {
@@ -75,12 +73,12 @@ textarea {
 
 #input_code, #ai_code {
     flex: 1;
-    height: auto;
+    height: auto; /* Adjust height as needed */
     margin-bottom: 10px;
+    font-size: 14px; /* Adjust font size for consistency */
 }
 
 #output_result {
-
     height: 10%;
     margin-bottom: 10px;
 }
