@@ -55,7 +55,7 @@ t_ignore = ' \t'  # to ignore characters (spaces and tabs)
 
 # Error handling rule for illegal characters
 def t_error(t):
-    print(f"\n\nIllegal Character or Unknown Token '{t.value[0]}'")
+    print(f"\nIllegal Character or Unknown Token '{t.value[0]}'")
     t.lexer.skip(1)
 
 
@@ -180,6 +180,8 @@ def free_vars(expr):
             return body - {head}
     elif isinstance(expr, AppNode):
         return free_vars(expr.func) | free_vars(expr.arg)
+    elif isinstance(expr, ArgNode):
+        return set()
     else:
         raise TypeError(f"\nUnexpected expression type: {type(expr)}")
 
@@ -197,6 +199,8 @@ def bound_vars(expr, bound=None):
         return bound_vars(expr.body, bound)
     elif isinstance(expr, AppNode):
         return bound_vars(expr.func, bound) | bound_vars(expr.arg, bound)
+    elif isinstance(expr, ArgNode):
+        return bound
     else:
         raise TypeError(f"\nUnexpected expression type: {type(expr)}")
 
@@ -229,6 +233,8 @@ def alpha_convert(expr, old_var, used_vars=None):
     elif isinstance(expr, AppNode):
         return AppNode(alpha_convert(expr.func, old_var, used_vars),
                        alpha_convert(expr.arg, old_var, used_vars))
+    elif isinstance(expr, ArgNode):
+        return expr
     else:
         raise TypeError(f"\nUnexpected expression type: {type(expr)}")
 
@@ -253,6 +259,8 @@ def substitute(var, expr, replacement, used_vars=None):
     elif isinstance(expr, AppNode):
         return AppNode(substitute(var, expr.func, replacement, used_vars),
                        substitute(var, expr.arg, replacement, used_vars))
+    elif isinstance(expr, ArgNode):
+        return expr
     else:
         raise TypeError(f"\nUnexpected expression type: {type(expr)}")
 
@@ -260,7 +268,7 @@ def substitute(var, expr, replacement, used_vars=None):
 # Function to perform beta reduction on expressions,
 # reducing them step by step to their normal form.
 def beta_reduce(expr):
-    if isinstance(expr, VarNode):
+    if isinstance(expr, VarNode) or isinstance(expr,ArgNode):
         return expr, False
     elif isinstance(expr, AbsNode):
         reduced_body, changed = beta_reduce(expr.body)
@@ -367,7 +375,7 @@ def main(input_code):
         result = curry(result)
         print("\nCurried expression:", result)
 
-        # Reduce the expression step by step
+        # Normal Form
         while True:
             new_result, changed = beta_reduce(result)
             if not changed:  # If no more reductions, try eta reduction
