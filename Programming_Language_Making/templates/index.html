@@ -30,20 +30,22 @@
     </div>
 
     <script>
-        // Loading Screen
         $(document).ready(function(){
             setTimeout(function(){
-                $('#loading-screen').fadeOut(1000);  // Fade out the loading screen
-                $('.container').css('opacity', 1).show(); // Show the container with fade-in effect
+                $('#loading-screen').fadeOut(1000);
+                $('.container').css('opacity', 1).show();
             }, 3000);
 
-            // Output and AI Generation
-             $('#compile_button').click(function(){
+            $('#compile_button').click(function(){
                 var inputCode = $('#input_code').val();
+                $('#console_output').text("Compiling...");
+                $('#output_result').val("Processing...");
+                $('#ai_code').val("Generating AI Explanation...");
+
                 $.post('/jakk', {input_code: inputCode}, function(data){
                     $('#console_output').html(data.console_output_str.replace(/\n/g, '<br>'));
                     $('#output_result').val("Normal form: " + data.final_result);
-                    $('#ai_code').val(data.ai_explanation);
+                    $('#ai_code').val(data.ai_explanation_str);
                 });
             });
         });
