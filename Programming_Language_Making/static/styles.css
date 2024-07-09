@@ -73,9 +73,9 @@ textarea {
 
 #input_code, #ai_code {
     flex: 1;
-    height: auto; /* Adjust height as needed */
+    height: auto;
     margin-bottom: 10px;
-    font-size: 14px; /* Adjust font size for consistency */
+    font-size: 14px;
 }
 
 #output_result {
