@@ -309,16 +309,24 @@ def eta_reduce(expr):
     return expr, False
 
 
+# Function to count the number of bound variables
+def count_bound_vars(expr):
+    return len(bound_vars(expr))
+
+
 # Function to curry a multi-argument function
 def curry(expr):
     if isinstance(expr, AbsNode):
         if isinstance(expr.body, AbsNode):
-            curried_body = curry(expr.body)
-            if curried_body is not expr.body:
-                # If the body has been curried, create a new abstraction node
-                curried_expr = AbsNode(expr.var, curried_body)
-                print(f"\nCurrying: {curried_expr}")
-                return curried_expr
+            count_bound_vars(expr.body)
+            # Check if the body has 2 or more bound variables
+            if count_bound_vars(expr) >= 2:
+                curried_body = curry(expr.body)
+                if curried_body is not expr.body:
+                    # If the body has been curried, create a new abstraction node
+                    curried_expr = AbsNode(expr.var, curried_body)
+                    print(f"Currying: {curried_expr}")
+                    return curried_expr
         return expr
     return expr
 
@@ -382,8 +390,12 @@ def main(input_code):
             print("\nBound variables:", bound)
 
         # Curry the expression
+        bound_vars_count = len(bound_vars(result))
         result = curry(result)
-        print("\nCurried expression:", result)
+
+        # Check if the expression was actually curried or is a curried expression
+        if bound_vars_count > 1:
+            print("\nCurried expression:", result)
 
         # Normal Form
         while True:
